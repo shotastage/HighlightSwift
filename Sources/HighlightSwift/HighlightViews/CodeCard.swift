@@ -18,7 +18,9 @@ public struct CodeCard: View {
     @State
     var highlightResult: HighlightResult?
     
-    let text: String
+    @Binding
+    var text: String
+
     let initialTextStyle: Font.TextStyle
     let initialStyleName: HighlightStyle.Name
     
@@ -27,10 +29,10 @@ public struct CodeCard: View {
     ///   - text: The plain text code to highlight.
     ///   - style: The initial highlight color style (default: .xcode).
     ///   - textStyle: The initial font text style (default: .caption2).
-    public init(_ text: String,
+    public init(_ text: Binding<String>,
                 style: HighlightStyle.Name = .xcode,
                 textStyle: Font.TextStyle = .caption2) {
-        self.text = text
+        self._text = text
         self.initialStyleName = style
         self.initialTextStyle = textStyle
         self._styleName = State(initialValue: style)
@@ -45,7 +47,7 @@ public struct CodeCard: View {
                 .onTapGesture(count: 2, perform: resetStyle)
                 .onTapGesture(perform: toggleShowButtons)
             HStack {
-                CodeText(text, style: styleName) { highlightResult in
+                CodeText($text, style: styleName) { highlightResult in
                     withAnimation {
                         self.highlightResult = highlightResult
                     }
@@ -164,6 +166,7 @@ public struct CodeCard: View {
     }
 }
 
+
 @available(iOS 16.1, *)
 @available(tvOS, unavailable)
 struct CodeCard_Previews: PreviewProvider {
@@ -183,10 +186,13 @@ struct CodeCard_Previews: PreviewProvider {
     }
     """
     
+    @State static var sampleText = code
+    
     static var previews: some View {
         ScrollView {
-            CodeCard(code)
+            CodeCard($sampleText)
                 .padding()
+                .frame(height: 400.0)
         }
     }
 }

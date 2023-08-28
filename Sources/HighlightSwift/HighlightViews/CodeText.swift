@@ -5,18 +5,20 @@ import SwiftUI
 public struct CodeText: View {
     @Environment(\.colorScheme)
     var colorScheme
-    
+       
     @State
     var highlightTask: Task<Void, Never>?
-    
+       
     @State
     var highlightResult: HighlightResult?
-    
-    let text: String
+       
+    @Binding
+    var text: String
+
     let language: String?
     let styleName: HighlightStyle.Name
     let onHighlight: ((HighlightResult) -> Void)?
-    
+       
     var highlightStyle: HighlightStyle {
         HighlightStyle(
             name: styleName,
@@ -24,11 +26,11 @@ public struct CodeText: View {
         )
     }
 
-    public init(_ text: String,
-                language: String? = nil,
-                style styleName: HighlightStyle.Name = .xcode,
-                onHighlight: ((HighlightResult) -> Void)? = nil) {
-        self.text = text
+    public init(_ text: Binding<String>,
+                    language: String? = nil,
+                    style styleName: HighlightStyle.Name = .xcode,
+                    onHighlight: ((HighlightResult) -> Void)? = nil) {
+        self._text = text
         self.language = language
         self.styleName = styleName
         self.onHighlight = onHighlight
@@ -44,6 +46,9 @@ public struct CodeText: View {
                     await highlightText()
                 }
             }
+            .onChange(of: text) { _ in
+                highlightText(styleName: styleName)
+            }
             .onChange(of: styleName) { newStyleName in
                 highlightText(styleName: newStyleName)
             }
@@ -56,12 +61,8 @@ public struct CodeText: View {
     private var highlightedTextEditor: some View {
         Group {
             if let highlightResult = highlightResult {
-                #if os(macOS)
                 AttributedTextEditor(text: .constant(NSAttributedString(highlightResult.attributed)))
                 
-                #else
-                AttributedTextEditor(text: .constant(NSAttributedString(highlightResult.attributed)))
-                #endif
             } else {
                 Text(text) // Fallback to regular Text if no highlight result is available
             }
@@ -125,8 +126,10 @@ struct CodeText_Previews: PreviewProvider {
     }
     """
     
+    @State static var sampleText = code
+    
     static var previews: some View {
-        CodeText(code)
+        CodeText($sampleText)
             .padding()
             .font(.caption2)
     }
