@@ -24,12 +24,6 @@ public struct CodeText: View {
         )
     }
 
-    /// Creates a text view that displays syntax highlighted code.
-    /// - Parameters:
-    ///   - text: The plain text code to highlight.
-    ///   - language: The language to use (default: automatic).
-    ///   - style: The highlight style name to use (default: .xcode).
-    ///   - onHighlight: Callback with the result of each highlight attempt (default: nil).
     public init(_ text: String,
                 language: String? = nil,
                 style styleName: HighlightStyle.Name = .xcode,
@@ -41,7 +35,7 @@ public struct CodeText: View {
     }
     
     public var body: some View {
-        highlightedText
+        highlightedTextEditor
             .fontDesign(.monospaced)
             .task {
                 if
@@ -59,11 +53,18 @@ public struct CodeText: View {
             }
     }
     
-    private var highlightedText: Text {
-        if let highlightResult {
-            return Text(highlightResult.attributed)
-        } else {
-            return Text(text)
+    private var highlightedTextEditor: some View {
+        Group {
+            if let highlightResult = highlightResult {
+                #if os(macOS)
+                AttributedTextEditor(text: .constant(NSAttributedString(highlightResult.attributed)))
+                
+                #else
+                AttributedTextEditor(text: .constant(NSAttributedString(highlightResult.attributed)))
+                #endif
+            } else {
+                Text(text) // Fallback to regular Text if no highlight result is available
+            }
         }
     }
         
